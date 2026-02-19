@@ -11,7 +11,7 @@ export default function JobsPage() {
   const { data, isLoading, isError } = useJobs(page, limit);
 
   return (
-    <main className="container mx-auto py-8">
+    <main className="container mx-auto max-w-7xl py-8">
       <h1 className="mb-6 text-2xl font-bold">Job Listings</h1>
 
       <JobList jobs={data?.data} isLoading={isLoading} isError={isError} />

@@ -18,10 +18,10 @@ export function JobCard({ job }: JobCardProps) {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.25 }}
     >
-      <Card className="h-full transition-all hover:shadow-md">
+      <Card className="h-full transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
         <CardHeader className="space-y-2">
           <div className="flex items-start justify-between gap-2">
-            <h3 className="text-lg font-semibold leading-tight">{job.title}</h3>
+            <h3 className="line-clamp-2 text-lg font-semibold leading-tight">{job.title}</h3>
 
             {isRemote && (
               <Badge variant="secondary" className="shrink-0">
