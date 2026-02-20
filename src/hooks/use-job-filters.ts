@@ -8,7 +8,7 @@ export function useJobFilters(jobs: Job[] | undefined, filters: JobFilters) {
   const filteredJobs = useMemo(() => {
     if (!jobs) return [];
 
-    return jobs.filter((job) => {
+    const filtered = jobs.filter((job) => {
       // Search filter
       if (filters.search) {
         const q = filters.search.toLowerCase();
@@ -73,6 +73,35 @@ export function useJobFilters(jobs: Job[] | undefined, filters: JobFilters) {
 
       return true;
     });
+
+    // ✅ SORTING LAYER
+    const sorted = [...filtered].sort((a, b) => {
+      switch (filters.sortBy) {
+        case "newest":
+          return (
+            new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+          );
+
+        case "oldest":
+          return (
+            new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+          );
+
+        case "salary_high":
+          return b.salary_to - a.salary_to;
+
+        case "salary_low":
+          return a.salary_from - b.salary_from;
+
+        case "openings":
+          return b.number_of_opening - a.number_of_opening;
+
+        default:
+          return 0;
+      }
+    });
+
+    return sorted;
   }, [jobs, filters]);
 
   return filteredJobs;
