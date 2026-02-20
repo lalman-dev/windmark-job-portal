@@ -69,6 +69,7 @@ export function FilterSummary({ filters, onChange }: Props) {
       salaryMax: null,
       minOpenings: null,
       createdWithinDays: null,
+      sortBy: "newest",
     });
   }
 

@@ -9,6 +9,7 @@ import { useJobFilters } from "@/hooks/use-job-filters";
 import type { JobFilters } from "@/types/filters";
 import { FilterPanel } from "@/components/filters/filter-panel";
 import { FilterSummary } from "@/components/filters/filter-summary";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export default function JobsPage() {
   const [filters, setFilters] = useState<JobFilters>({
@@ -21,6 +22,7 @@ export default function JobsPage() {
     salaryMax: null,
     minOpenings: null,
     createdWithinDays: null,
+    sortBy: "newest",
   });
 
   const [searchInput, setSearchInput] = useState("");
@@ -74,6 +76,33 @@ export default function JobsPage() {
 
         <div className="min-w-0">
           <FilterSummary filters={filters} onChange={setFilters} />
+
+          <div className="mb-4 flex items-center justify-between">
+            <p className="text-sm text-muted-foreground">
+              {filteredJobs.length} results
+            </p>
+
+            <Select
+              value={filters.sortBy}
+              onValueChange={(v) =>
+                setFilters((prev) => ({
+                  ...prev,
+                  sortBy: v as any,
+                }))
+              }
+            >
+              <SelectTrigger className="w-50">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="newest">Newest First</SelectItem>
+                <SelectItem value="oldest">Oldest First</SelectItem>
+                <SelectItem value="salary_high">Salary High → Low</SelectItem>
+                <SelectItem value="salary_low">Salary Low → High</SelectItem>
+                <SelectItem value="openings">Most Openings</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
           <JobList
             jobs={filteredJobs}
             isLoading={isLoading}
