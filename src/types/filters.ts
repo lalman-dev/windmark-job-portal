@@ -1,3 +1,10 @@
+export type SortOption =
+  | "newest"
+  | "oldest"
+  | "salary_high"
+  | "salary_low"
+  | "openings";
+
 export interface JobFilters {
   search: string;
   location: string;
@@ -8,4 +15,5 @@ export interface JobFilters {
   salaryMax: number | null;
   minOpenings: number | null;
   createdWithinDays: number | null;
+  sortBy: SortOption;
 }
