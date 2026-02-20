@@ -9,7 +9,15 @@ import { useJobFilters } from "@/hooks/use-job-filters";
 import type { JobFilters } from "@/types/filters";
 import { FilterPanel } from "@/components/filters/filter-panel";
 import { FilterSummary } from "@/components/filters/filter-summary";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { PaginationControls } from "@/components/jobs/pagination-controls";
+import { Button } from "@/components/ui/button";
 
 export default function JobsPage() {
   const [filters, setFilters] = useState<JobFilters>({
@@ -26,15 +34,19 @@ export default function JobsPage() {
   });
 
   const [searchInput, setSearchInput] = useState("");
-
-  const [page] = useState(1);
+  const [viewMode, setViewMode] = useState<"pagination" | "infinite">(
+    "pagination",
+  );
+  const [page, setPage] = useState(1);
   const limit = 10;
 
   const { data, isLoading, isError } = useJobs(page, limit);
   const filteredJobs = useJobFilters(data?.data, filters);
 
   const jobs = data?.data ?? [];
-
+  const currentPage = data?.current_page ?? 1;
+  const totalPages = data?.last_page ?? 1;
+  const hasNextPage = Boolean(data?.next_page_url);
   const locations = Array.from(new Set(jobs.map((j) => j.location)));
   const categories = Array.from(new Set(jobs.map((j) => j.job_category)));
   const employmentTypes = Array.from(
@@ -103,11 +115,35 @@ export default function JobsPage() {
               </SelectContent>
             </Select>
           </div>
+          <div className="mb-4 flex items-center gap-2">
+            <Button
+              variant={viewMode === "pagination" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setViewMode("pagination")}
+            >
+              Pagination
+            </Button>
+
+            <Button
+              variant={viewMode === "infinite" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setViewMode("infinite")}
+            >
+              Infinite Scroll
+            </Button>
+          </div>
           <JobList
             jobs={filteredJobs}
             isLoading={isLoading}
             isError={isError}
           />
+          {viewMode === "pagination" && (
+            <PaginationControls
+              page={currentPage}
+              totalPages={totalPages}
+              onPageChange={(p) => setPage(p)}
+            />
+          )}
         </div>
       </div>
     </main>
