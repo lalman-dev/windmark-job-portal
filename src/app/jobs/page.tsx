@@ -4,12 +4,26 @@ import { useState } from "react";
 import { useJobs } from "@/hooks/use-jobs";
 import { JobList } from "@/components/jobs/job-list";
 import { ThemeToggle } from "@/components/shared/theme-toggle";
+import { useJobFilters } from "@/hooks/use-job-filters";
 
 export default function JobsPage() {
+  const [filters, setFilters] = useState({
+    search: "",
+    location: "",
+    employmentTypes: [],
+    jobCategory: "",
+    remoteOnly: false,
+    salaryMin: null,
+    salaryMax: null,
+    minOpenings: null,
+    createdWithinDays: null,
+  });
+
   const [page] = useState(1);
   const limit = 10;
 
   const { data, isLoading, isError } = useJobs(page, limit);
+  const filteredJobs = useJobFilters(data?.data, filters);
 
   return (
     <main className="container mx-auto max-w-7xl py-8 px-4">
@@ -22,7 +36,7 @@ export default function JobsPage() {
           </p>
         </div>
       </div>
-      <JobList jobs={data?.data} isLoading={isLoading} isError={isError} />
+      <JobList jobs={filteredJobs} isLoading={isLoading} isError={isError} />
     </main>
   );
 }
