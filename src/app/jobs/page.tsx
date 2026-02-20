@@ -1,14 +1,16 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import type { JobFilters } from "@/types/filters";
 import { useJobs } from "@/hooks/use-jobs";
 import { JobList } from "@/components/jobs/job-list";
 import { ThemeToggle } from "@/components/shared/theme-toggle";
 import { useJobFilters } from "@/hooks/use-job-filters";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
+import { FilterPanel } from "@/components/filters/filter-panel";
 
 export default function JobsPage() {
-  const [filters, setFilters] = useState({
+  const [filters, setFilters] = useState<JobFilters>({
     search: "",
     location: "",
     employmentTypes: [],
@@ -28,6 +30,14 @@ export default function JobsPage() {
   const { data, isLoading, isError } = useJobs(page, limit);
   const filteredJobs = useJobFilters(data?.data, filters);
 
+  const jobs = data?.data ?? [];
+
+  const locations = Array.from(new Set(jobs.map((j) => j.location)));
+  const categories = Array.from(new Set(jobs.map((j) => j.job_category)));
+  const employmentTypes = Array.from(
+    new Set(jobs.map((j) => j.employment_type)),
+  );
+
   const debouncedSearch = useDebouncedValue(searchInput, 500);
 
   useEffect(() => {
@@ -42,35 +52,24 @@ export default function JobsPage() {
       <div className="mb-8 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <ThemeToggle />
-          <h1 className="text-2xl font-bold tracking-tight">Job Listings</h1>
-          <p className="text-sm text-muted-foreground">
+          <h1 className="text-3xl font-bold tracking-tight">WindMark Job Listings</h1>
+          <p className="text-md text-muted-foreground">
             Discover opportunities tailored for you
           </p>
         </div>
       </div>
-      <div className="mb-6 max-w-md">
-        <input
-          className="w-full rounded-md border px-3 py-2 text-sm"
-          placeholder="Search jobs, companies..."
-          value={searchInput}
-          onChange={(e) => setSearchInput(e.target.value)}
+      <div className="grid items-start gap-6 lg:grid-cols-[280px_1fr]">
+        <FilterPanel
+          filters={filters}
+          onChange={setFilters}
+          searchInput={searchInput}
+          onSearchChange={setSearchInput}
+          locations={locations}
+          categories={categories}
+          employmentTypes={employmentTypes}
         />
+        <JobList jobs={filteredJobs} isLoading={isLoading} isError={isError} />
       </div>
-      <label className="mb-4 flex items-center gap-2 text-sm">
-        <input
-          type="checkbox"
-          checked={filters.remoteOnly}
-          onChange={(e) =>
-            setFilters((prev) => ({
-              ...prev,
-              remoteOnly: e.target.checked,
-            }))
-          }
-        />
-        Remote only (debug)
-      </label>
-
-      <JobList jobs={filteredJobs} isLoading={isLoading} isError={isError} />
     </main>
   );
 }
