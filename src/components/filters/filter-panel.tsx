@@ -124,6 +124,73 @@ export function FilterPanel({
           onCheckedChange={(v) => update("remoteOnly", Boolean(v))}
         />
       </div>
+
+      {/* 💰 Salary Range */}
+      <div className="space-y-2">
+        <Label>Salary Range</Label>
+        <div className="grid grid-cols-2 gap-2">
+          <Input
+            type="number"
+            placeholder="Min"
+            value={filters.salaryMin ?? ""}
+            onChange={(e) =>
+              update(
+                "salaryMin",
+                e.target.value ? Number(e.target.value) : null,
+              )
+            }
+          />
+          <Input
+            type="number"
+            placeholder="Max"
+            value={filters.salaryMax ?? ""}
+            onChange={(e) =>
+              update(
+                "salaryMax",
+                e.target.value ? Number(e.target.value) : null,
+              )
+            }
+          />
+        </div>
+      </div>
+      {/* 👥 Minimum Openings */}
+      <div className="space-y-2">
+        <Label>Minimum Openings</Label>
+        <Input
+          type="number"
+          placeholder="e.g. 3"
+          value={filters.minOpenings ?? ""}
+          onChange={(e) =>
+            update(
+              "minOpenings",
+              e.target.value ? Number(e.target.value) : null,
+            )
+          }
+        />
+      </div>
+      {/* 📅 Created Within */}
+      <div className="space-y-2">
+        <Label>Created Within</Label>
+        <Select
+          value={
+            filters.createdWithinDays
+              ? String(filters.createdWithinDays)
+              : "all"
+          }
+          onValueChange={(v) =>
+            update("createdWithinDays", v === "all" ? null : Number(v))
+          }
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Any time" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Any time</SelectItem>
+            <SelectItem value="7">Last 7 days</SelectItem>
+            <SelectItem value="30">Last 30 days</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
     </div>
   );
 }
