@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useJobs } from "@/hooks/use-jobs";
 import { JobList } from "@/components/jobs/job-list";
 import { ThemeToggle } from "@/components/shared/theme-toggle";
 import { useJobFilters } from "@/hooks/use-job-filters";
+import { useDebouncedValue } from "@/hooks/use-debounced-value";
 
 export default function JobsPage() {
   const [filters, setFilters] = useState({
@@ -19,11 +20,22 @@ export default function JobsPage() {
     createdWithinDays: null,
   });
 
+  const [searchInput, setSearchInput] = useState("");
+
   const [page] = useState(1);
   const limit = 10;
 
   const { data, isLoading, isError } = useJobs(page, limit);
   const filteredJobs = useJobFilters(data?.data, filters);
+
+  const debouncedSearch = useDebouncedValue(searchInput, 500);
+
+  useEffect(() => {
+    setFilters((prev) => ({
+      ...prev,
+      search: debouncedSearch,
+    }));
+  }, [debouncedSearch]);
 
   return (
     <main className="container mx-auto max-w-7xl py-8 px-4">
@@ -36,6 +48,28 @@ export default function JobsPage() {
           </p>
         </div>
       </div>
+      <div className="mb-6 max-w-md">
+        <input
+          className="w-full rounded-md border px-3 py-2 text-sm"
+          placeholder="Search jobs, companies..."
+          value={searchInput}
+          onChange={(e) => setSearchInput(e.target.value)}
+        />
+      </div>
+      <label className="mb-4 flex items-center gap-2 text-sm">
+        <input
+          type="checkbox"
+          checked={filters.remoteOnly}
+          onChange={(e) =>
+            setFilters((prev) => ({
+              ...prev,
+              remoteOnly: e.target.checked,
+            }))
+          }
+        />
+        Remote only (debug)
+      </label>
+
       <JobList jobs={filteredJobs} isLoading={isLoading} isError={isError} />
     </main>
   );
