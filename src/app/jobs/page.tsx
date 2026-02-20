@@ -1,13 +1,14 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import type { JobFilters } from "@/types/filters";
 import { useJobs } from "@/hooks/use-jobs";
 import { JobList } from "@/components/jobs/job-list";
 import { ThemeToggle } from "@/components/shared/theme-toggle";
-import { useJobFilters } from "@/hooks/use-job-filters";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
+import { useJobFilters } from "@/hooks/use-job-filters";
+import type { JobFilters } from "@/types/filters";
 import { FilterPanel } from "@/components/filters/filter-panel";
+import { FilterSummary } from "@/components/filters/filter-summary";
 
 export default function JobsPage() {
   const [filters, setFilters] = useState<JobFilters>({
@@ -52,7 +53,9 @@ export default function JobsPage() {
       <div className="mb-8 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <ThemeToggle />
-          <h1 className="text-3xl font-bold tracking-tight">WindMark Job Listings</h1>
+          <h1 className="text-3xl font-bold tracking-tight">
+            WindMark Job Listings
+          </h1>
           <p className="text-md text-muted-foreground">
             Discover opportunities tailored for you
           </p>
@@ -68,7 +71,15 @@ export default function JobsPage() {
           categories={categories}
           employmentTypes={employmentTypes}
         />
-        <JobList jobs={filteredJobs} isLoading={isLoading} isError={isError} />
+
+        <div className="min-w-0">
+          <FilterSummary filters={filters} onChange={setFilters} />
+          <JobList
+            jobs={filteredJobs}
+            isLoading={isLoading}
+            isError={isError}
+          />
+        </div>
       </div>
     </main>
   );
