@@ -22,6 +22,8 @@ import { Button } from "@/components/ui/button";
 import { useIntersection } from "@/hooks/use-intersection";
 import { exportJobsToCSV } from "@/lib/export-csv";
 import { exportJobsToPDF } from "@/lib/export-pdf";
+import { EmptyState } from "@/components/states/empty-state";
+import { ErrorState } from "@/components/states/error-state";
 
 export default function JobsPage() {
   const [filters, setFilters] = useState<JobFilters>({
@@ -203,14 +205,36 @@ export default function JobsPage() {
             isLoading={isLoading}
             isError={isError}
           />
+          {/* Error and Empty States */}
+          {isError && <ErrorState onRetry={() => window.location.reload()} />}
+
+          {!isLoading && !isError && filteredJobs.length === 0 && (
+            <EmptyState
+              onClear={() =>
+                setFilters({
+                  search: "",
+                  location: "",
+                  employmentTypes: [],
+                  jobCategory: "",
+                  remoteOnly: false,
+                  salaryMin: null,
+                  salaryMax: null,
+                  minOpenings: null,
+                  createdWithinDays: null,
+                  sortBy: "newest",
+                })
+              }
+            />
+          )}
+          {/* Pagination and Infinite scroll */}
           {viewMode === "infinite" && hasNextPage && (
             <div ref={loadMoreRef} className="h-10" />
           )}
-          {viewMode === "pagination" && (
+          {viewMode === "pagination" && filteredJobs.length > 0 && (
             <PaginationControls
               page={currentPage}
               totalPages={totalPages}
-              onPageChange={(p) => setPage(p)}
+              onPageChange={setPage}
             />
           )}
         </div>
