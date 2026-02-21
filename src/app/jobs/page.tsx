@@ -21,6 +21,7 @@ import { PaginationControls } from "@/components/jobs/pagination-controls";
 import { Button } from "@/components/ui/button";
 import { useIntersection } from "@/hooks/use-intersection";
 import { exportJobsToCSV } from "@/lib/export-csv";
+import { exportJobsToPDF } from "@/lib/export-pdf";
 
 export default function JobsPage() {
   const [filters, setFilters] = useState<JobFilters>({
@@ -148,6 +149,15 @@ export default function JobsPage() {
                 Export CSV
               </Button>
 
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => exportJobsToPDF(filteredJobs, filters)}
+                disabled={!filteredJobs.length}
+              >
+                Export PDF
+              </Button>
+
               <Select
                 value={filters.sortBy}
                 onValueChange={(v) =>
@@ -157,7 +167,7 @@ export default function JobsPage() {
                   }))
                 }
               >
-                <SelectTrigger className="w-[200px]">
+                <SelectTrigger className="w-50">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
