@@ -7,6 +7,7 @@ import { ThemeToggle } from "@/components/shared/theme-toggle";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import { useJobFilters } from "@/hooks/use-job-filters";
 import type { JobFilters } from "@/types/filters";
+import type { Job } from "@/types/job";
 import { FilterPanel } from "@/components/filters/filter-panel";
 import { FilterSummary } from "@/components/filters/filter-summary";
 import {
@@ -38,8 +39,9 @@ export default function JobsPage() {
     "pagination",
   );
   const [page, setPage] = useState(1);
-  const limit = 10;
+  const [allJobs, setAllJobs] = useState<Job[]>([]);
 
+  const limit = 10;
   const { data, isLoading, isError } = useJobs(page, limit);
   const filteredJobs = useJobFilters(data?.data, filters);
 
