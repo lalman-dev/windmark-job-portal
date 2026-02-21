@@ -109,16 +109,17 @@ export default function JobsPage() {
 
   return (
     <main className="container mx-auto max-w-7xl py-8 px-4">
-      <div className="mb-8 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+      <div className="mb-8 flex items-start justify-between">
         <div>
-          <ThemeToggle />
           <h1 className="text-3xl font-bold tracking-tight">
-            WindMark Job Listings
+            Windmark Job Listings
           </h1>
           <p className="text-md text-muted-foreground">
             Discover opportunities tailored for you
           </p>
         </div>
+
+        <ThemeToggle />
       </div>
       <div className="grid items-start gap-6 lg:grid-cols-[280px_1fr]">
         <FilterPanel
@@ -135,8 +136,8 @@ export default function JobsPage() {
           <FilterSummary filters={filters} onChange={setFilters} />
 
           <div className="mb-4 flex items-center justify-between gap-2">
-            <p className="text-sm text-muted-foreground">
-              {filteredJobs.length} results
+            <p className="text-sm text-muted-foreground" aria-live="polite">
+              Showing {filteredJobs.length} results
             </p>
 
             <div className="flex items-center gap-2">
