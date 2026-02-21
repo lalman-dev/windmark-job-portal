@@ -182,6 +182,8 @@ This prevents ambiguous UI states and improves maintainability.
 
 - UI components kept presentation-focused
 
+---
+
 2. Hydration & SSR Safety
 
 - suppressHydrationWarning used appropriately
@@ -191,6 +193,8 @@ This prevents ambiguous UI states and improves maintainability.
 - No client/server mismatch warnings
 
 - Avoided Date-based rendering inconsistencies
+
+---
 
 3. Infinite Scroll Stability
 
@@ -205,6 +209,8 @@ Implemented using:
 - Reset handling on filter change
 
 - Protection against infinite update loops
+
+---
 
 4. Performance Considerations
 
@@ -298,7 +304,7 @@ src/
 ## 🛠 Running Locally
 
 ```bash
-git clone <repo>
+git clone https://github.com/lalman-dev/windmark-job-portal.git
 cd windmark-job-portal
 npm install
 npm run dev
@@ -336,3 +342,13 @@ This project was built with emphasis on:
 - Clear state separation
 
 - Professional UI consistency
+
+---
+
+## 👨‍💻 About the Author
+
+Built by **Lalman**, a frontend-focused engineer working with React, Next.js, and scalable UI architecture.
+
+This project reflects my approach to building stable, production-ready frontend systems with clean separation of concerns and strong UX fundamentals.
+
+Open to frontend or product-focused roles where performance, maintainability, and user experience matter.
