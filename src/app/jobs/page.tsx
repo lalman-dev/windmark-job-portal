@@ -20,6 +20,7 @@ import {
 import { PaginationControls } from "@/components/jobs/pagination-controls";
 import { Button } from "@/components/ui/button";
 import { useIntersection } from "@/hooks/use-intersection";
+import { exportJobsToCSV } from "@/lib/export-csv";
 
 export default function JobsPage() {
   const [filters, setFilters] = useState<JobFilters>({
@@ -132,31 +133,42 @@ export default function JobsPage() {
         <div className="min-w-0">
           <FilterSummary filters={filters} onChange={setFilters} />
 
-          <div className="mb-4 flex items-center justify-between">
+          <div className="mb-4 flex items-center justify-between gap-2">
             <p className="text-sm text-muted-foreground">
               {filteredJobs.length} results
             </p>
 
-            <Select
-              value={filters.sortBy}
-              onValueChange={(v) =>
-                setFilters((prev) => ({
-                  ...prev,
-                  sortBy: v as any,
-                }))
-              }
-            >
-              <SelectTrigger className="w-50">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="newest">Newest First</SelectItem>
-                <SelectItem value="oldest">Oldest First</SelectItem>
-                <SelectItem value="salary_high">Salary High → Low</SelectItem>
-                <SelectItem value="salary_low">Salary Low → High</SelectItem>
-                <SelectItem value="openings">Most Openings</SelectItem>
-              </SelectContent>
-            </Select>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => exportJobsToCSV(filteredJobs)}
+                disabled={!filteredJobs.length}
+              >
+                Export CSV
+              </Button>
+
+              <Select
+                value={filters.sortBy}
+                onValueChange={(v) =>
+                  setFilters((prev) => ({
+                    ...prev,
+                    sortBy: v as any,
+                  }))
+                }
+              >
+                <SelectTrigger className="w-[200px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="newest">Newest First</SelectItem>
+                  <SelectItem value="oldest">Oldest First</SelectItem>
+                  <SelectItem value="salary_high">Salary High → Low</SelectItem>
+                  <SelectItem value="salary_low">Salary Low → High</SelectItem>
+                  <SelectItem value="openings">Most Openings</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
           <div className="mb-4 flex items-center gap-2">
             <Button
