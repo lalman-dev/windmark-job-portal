@@ -18,7 +18,6 @@ interface FilterPanelProps {
   onChange: (filters: JobFilters) => void;
   searchInput: string;
   onSearchChange: (value: string) => void;
-
   locations: string[];
   categories: string[];
   employmentTypes: string[];
@@ -33,22 +32,37 @@ export function FilterPanel({
   categories,
   employmentTypes,
 }: FilterPanelProps) {
+  // Safe updater
+
   function update<K extends keyof JobFilters>(key: K, value: JobFilters[K]) {
+    if (filters[key] === value) return; // 🔒 prevents render loops
     onChange({ ...filters, [key]: value });
   }
 
+  // Employment toggle
+
   function toggleEmployment(type: string) {
     const exists = filters.employmentTypes.includes(type);
+
     const next = exists
       ? filters.employmentTypes.filter((t) => t !== type)
       : [...filters.employmentTypes, type];
+
+    // shallow compare to avoid useless updates
+    if (
+      next.length === filters.employmentTypes.length &&
+      next.every((v, i) => v === filters.employmentTypes[i])
+    ) {
+      return;
+    }
 
     update("employmentTypes", next);
   }
 
   return (
-    <div className="space-y-6 rounded-lg border bg-card/80 p-4">
+    <div className="space-y-6 rounded-lg border bg-card p-4">
       {/* Search */}
+
       <div className="space-y-2">
         <Label>Search</Label>
         <Input
@@ -59,11 +73,16 @@ export function FilterPanel({
       </div>
 
       {/* Location */}
+
       <div className="space-y-2">
         <Label>Location</Label>
         <Select
           value={filters.location || "all"}
-          onValueChange={(v) => update("location", v === "all" ? "" : v)}
+          onValueChange={(value) => {
+            const nextValue = value === "all" ? "" : value;
+            if (nextValue === filters.location) return;
+            update("location", nextValue);
+          }}
         >
           <SelectTrigger>
             <SelectValue placeholder="All locations" />
@@ -79,7 +98,8 @@ export function FilterPanel({
         </Select>
       </div>
 
-      {/* Employment type */}
+      {/* Employment Type */}
+
       <div className="space-y-3">
         <Label>Employment Type</Label>
         <div className="space-y-2">
@@ -87,7 +107,10 @@ export function FilterPanel({
             <label key={type} className="flex items-center gap-2 text-sm">
               <Checkbox
                 checked={filters.employmentTypes.includes(type)}
-                onCheckedChange={() => toggleEmployment(type)}
+                onCheckedChange={(checked) => {
+                  if (checked === undefined) return;
+                  toggleEmployment(type);
+                }}
               />
               {type}
             </label>
@@ -96,11 +119,16 @@ export function FilterPanel({
       </div>
 
       {/* Category */}
+
       <div className="space-y-2">
         <Label>Job Category</Label>
         <Select
           value={filters.jobCategory || "all"}
-          onValueChange={(v) => update("jobCategory", v === "all" ? "" : v)}
+          onValueChange={(value) => {
+            const nextValue = value === "all" ? "" : value;
+            if (nextValue === filters.jobCategory) return;
+            update("jobCategory", nextValue);
+          }}
         >
           <SelectTrigger>
             <SelectValue placeholder="All categories" />
@@ -116,16 +144,18 @@ export function FilterPanel({
         </Select>
       </div>
 
-      {/* Remote */}
+      {/* Remote Only */}
+
       <div className="flex items-center justify-between">
         <Label>Remote Only</Label>
         <Switch
           checked={filters.remoteOnly}
-          onCheckedChange={(v) => update("remoteOnly", Boolean(v))}
+          onCheckedChange={(checked) => update("remoteOnly", Boolean(checked))}
         />
       </div>
 
-      {/* 💰 Salary Range */}
+      {/* Salary Range */}
+
       <div className="space-y-2">
         <Label>Salary Range</Label>
         <div className="grid grid-cols-2 gap-2">
@@ -153,7 +183,8 @@ export function FilterPanel({
           />
         </div>
       </div>
-      {/* 👥 Minimum Openings */}
+
+      {/* Minimum Openings */}
       <div className="space-y-2">
         <Label>Minimum Openings</Label>
         <Input
@@ -168,21 +199,24 @@ export function FilterPanel({
           }
         />
       </div>
-      {/* 📅 Created Within */}
+
+      {/* Created Within */}
       <div className="space-y-2">
         <Label>Created Within</Label>
         <Select
           value={
-            filters.createdWithinDays
-              ? String(filters.createdWithinDays)
-              : "all"
+            filters.createdWithinDays === null
+              ? "all"
+              : String(filters.createdWithinDays)
           }
-          onValueChange={(v) =>
-            update("createdWithinDays", v === "all" ? null : Number(v))
-          }
+          onValueChange={(value) => {
+            const nextValue = value === "all" ? null : Number(value);
+            if (nextValue === filters.createdWithinDays) return;
+            update("createdWithinDays", nextValue);
+          }}
         >
           <SelectTrigger>
-            <SelectValue placeholder="Any time" />
+            <SelectValue />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Any time</SelectItem>

@@ -74,7 +74,7 @@ export function useJobFilters(jobs: Job[] | undefined, filters: JobFilters) {
       return true;
     });
 
-    // ✅ SORTING LAYER
+    // SORTING LAYER
     const sorted = [...filtered].sort((a, b) => {
       switch (filters.sortBy) {
         case "newest":
@@ -102,7 +102,19 @@ export function useJobFilters(jobs: Job[] | undefined, filters: JobFilters) {
     });
 
     return sorted;
-  }, [jobs, filters]);
+  }, [
+    jobs,
+    filters.search,
+    filters.location,
+    filters.employmentTypes.join("|"),
+    filters.jobCategory,
+    filters.remoteOnly,
+    filters.salaryMin,
+    filters.salaryMax,
+    filters.minOpenings,
+    filters.createdWithinDays,
+    filters.sortBy,
+  ]);
 
   return filteredJobs;
 }
