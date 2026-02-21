@@ -1,5 +1,5 @@
 "use client";
-
+import { motion } from "framer-motion";
 import { JobCard } from "./job-card";
 import { JobCardSkeleton } from "@/components/shared/job-card-skeleton";
 import type { Job } from "@/types/job";
@@ -38,10 +38,15 @@ export function JobList({ jobs, isLoading, isError }: JobListProps) {
   }
 
   return (
-    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.25 }}
+      className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3"
+    >
       {jobs.map((job) => (
         <JobCard key={job.id} job={job} />
       ))}
-    </div>
+    </motion.div>
   );
 }
