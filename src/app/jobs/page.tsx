@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/select";
 import { PaginationControls } from "@/components/jobs/pagination-controls";
 import { Button } from "@/components/ui/button";
+import { useIntersection } from "@/hooks/use-intersection";
 
 export default function JobsPage() {
   const [filters, setFilters] = useState<JobFilters>({
@@ -43,9 +44,11 @@ export default function JobsPage() {
 
   const limit = 10;
   const { data, isLoading, isError } = useJobs(page, limit);
-  const filteredJobs = useJobFilters(data?.data, filters);
 
   const jobs = data?.data ?? [];
+  const sourceJobs = viewMode === "infinite" ? allJobs : jobs;
+  const filteredJobs = useJobFilters(sourceJobs, filters);
+
   const currentPage = data?.current_page ?? 1;
   const totalPages = data?.last_page ?? 1;
   const hasNextPage = Boolean(data?.next_page_url);
@@ -63,6 +66,44 @@ export default function JobsPage() {
       search: debouncedSearch,
     }));
   }, [debouncedSearch]);
+
+  useEffect(() => {
+    if (viewMode !== "infinite") {
+      setAllJobs(jobs);
+      return;
+    }
+
+    if (page === 1) {
+      setAllJobs(jobs);
+      return;
+    }
+
+    setAllJobs((prev) => {
+      const map = new Map(prev.map((j) => [j.id, j]));
+      jobs.forEach((j) => map.set(j.id, j));
+      return Array.from(map.values());
+    });
+  }, [page, viewMode]);
+
+  const loadMoreRef = useIntersection(
+    () => {
+      if (viewMode !== "infinite") return;
+      if (!hasNextPage) return;
+      if (isLoading) return;
+
+      setPage((p) => p + 1);
+    },
+    viewMode === "infinite" && hasNextPage,
+  );
+
+  const filterKey = JSON.stringify(filters);
+
+  useEffect(() => {
+    if (viewMode !== "infinite") return;
+
+    setPage(1);
+    setAllJobs([]);
+  }, [filterKey, viewMode]);
 
   return (
     <main className="container mx-auto max-w-7xl py-8 px-4">
@@ -139,6 +180,9 @@ export default function JobsPage() {
             isLoading={isLoading}
             isError={isError}
           />
+          {viewMode === "infinite" && hasNextPage && (
+            <div ref={loadMoreRef} className="h-10" />
+          )}
           {viewMode === "pagination" && (
             <PaginationControls
               page={currentPage}
