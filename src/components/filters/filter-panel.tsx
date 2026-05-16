@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { useQueryStates } from "nuqs";
+import { filterParsers } from "@/lib/search-params";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -15,60 +17,60 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { SlidersHorizontal, ChevronDown } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import type { JobFilters } from "@/types/filters";
-
-const DEFAULT_FILTERS: JobFilters = {
-  search: "",
-  location: "",
-  employmentTypes: [],
-  jobCategory: "",
-  remoteOnly: false,
-  salaryMin: null,
-  salaryMax: null,
-  minOpenings: null,
-  createdWithinDays: null,
-  sortBy: "newest",
-};
+import { useDebouncedValue } from "@/hooks/use-debounced-value";
+import { useEffect } from "react";
 
 interface FilterPanelProps {
-  filters: JobFilters;
-  onChange: (filters: JobFilters) => void;
-  searchInput: string;
-  onSearchChange: (value: string) => void;
   locations: string[];
   categories: string[];
   employmentTypes: string[];
 }
 
 export function FilterPanel({
-  filters,
-  onChange,
-  searchInput,
-  onSearchChange,
   locations,
   categories,
   employmentTypes,
 }: FilterPanelProps) {
+  const [filters, setFilters] = useQueryStates(filterParsers, {
+    shallow: true,
+  });
+
+  const [searchInput, setSearchInput] = useState(filters.search);
+  const debouncedSearch = useDebouncedValue(searchInput, 500);
+
+  useEffect(() => {
+    if (debouncedSearch !== filters.search) {
+      setFilters({ search: debouncedSearch });
+    }
+  }, [debouncedSearch]);
+
+  useEffect(() => {
+    setSearchInput(filters.search);
+  }, [filters.search]);
+
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  function update<K extends keyof JobFilters>(key: K, value: JobFilters[K]) {
-    if (filters[key] === value) return;
-    onChange({ ...filters, [key]: value });
-  }
-
   function toggleEmployment(type: string) {
-    const exists = filters.employmentTypes.includes(type);
-    const next = exists
+    const next = filters.employmentTypes.includes(type)
       ? filters.employmentTypes.filter((t) => t !== type)
       : [...filters.employmentTypes, type];
+    setFilters({ employmentTypes: next });
+  }
 
-    if (
-      next.length === filters.employmentTypes.length &&
-      next.every((v, i) => v === filters.employmentTypes[i])
-    ) {
-      return;
-    }
-    update("employmentTypes", next);
+  function resetFilters() {
+    setSearchInput("");
+    setFilters({
+      search: "",
+      location: "",
+      employmentTypes: [],
+      jobCategory: "",
+      remoteOnly: false,
+      salaryMin: null,
+      salaryMax: null,
+      minOpenings: null,
+      createdWithinDays: null,
+      sortBy: "newest",
+    });
   }
 
   const hasActiveFilters =
@@ -79,11 +81,23 @@ export function FilterPanel({
     filters.salaryMin !== null ||
     filters.salaryMax !== null ||
     filters.minOpenings !== null ||
-    filters.createdWithinDays !== null;
+    filters.createdWithinDays !== null ||
+    filters.search;
+
+  const activeCount = [
+    filters.search,
+    filters.location,
+    ...filters.employmentTypes,
+    filters.jobCategory,
+    filters.remoteOnly ? "r" : null,
+    filters.salaryMin,
+    filters.salaryMax,
+    filters.minOpenings,
+    filters.createdWithinDays,
+  ].filter(Boolean).length;
 
   const panelContent = (
     <div className="space-y-5">
-      {/* Search */}
       <div className="space-y-1.5">
         <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
           Search
@@ -91,23 +105,18 @@ export function FilterPanel({
         <Input
           placeholder="Title, company, or keyword…"
           value={searchInput}
-          onChange={(e) => onSearchChange(e.target.value)}
+          onChange={(e) => setSearchInput(e.target.value)}
           className="h-9 text-sm"
         />
       </div>
 
-      {/* Location */}
       <div className="space-y-1.5">
         <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
           Location
         </Label>
         <Select
           value={filters.location || "all"}
-          onValueChange={(value) => {
-            const nextValue = value === "all" ? "" : value;
-            if (nextValue === filters.location) return;
-            update("location", nextValue);
-          }}
+          onValueChange={(v) => setFilters({ location: v === "all" ? "" : v })}
         >
           <SelectTrigger className="h-9 text-sm">
             <SelectValue placeholder="All locations" />
@@ -123,7 +132,6 @@ export function FilterPanel({
         </Select>
       </div>
 
-      {/* Employment Type */}
       {employmentTypes.length > 0 && (
         <div className="space-y-2">
           <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
@@ -137,10 +145,7 @@ export function FilterPanel({
               >
                 <Checkbox
                   checked={filters.employmentTypes.includes(type)}
-                  onCheckedChange={(checked) => {
-                    if (checked === undefined) return;
-                    toggleEmployment(type);
-                  }}
+                  onCheckedChange={() => toggleEmployment(type)}
                   className="data-[state=checked]:bg-brand data-[state=checked]:border-brand"
                 />
                 <span className="group-hover:text-foreground transition-colors text-muted-foreground">
@@ -152,18 +157,15 @@ export function FilterPanel({
         </div>
       )}
 
-      {/* Category */}
       <div className="space-y-1.5">
         <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
           Category
         </Label>
         <Select
           value={filters.jobCategory || "all"}
-          onValueChange={(value) => {
-            const nextValue = value === "all" ? "" : value;
-            if (nextValue === filters.jobCategory) return;
-            update("jobCategory", nextValue);
-          }}
+          onValueChange={(v) =>
+            setFilters({ jobCategory: v === "all" ? "" : v })
+          }
         >
           <SelectTrigger className="h-9 text-sm">
             <SelectValue placeholder="All categories" />
@@ -179,17 +181,15 @@ export function FilterPanel({
         </Select>
       </div>
 
-      {/* Remote Only */}
       <div className="flex items-center justify-between">
         <Label className="text-sm cursor-pointer">Remote only</Label>
         <Switch
           checked={filters.remoteOnly}
-          onCheckedChange={(checked) => update("remoteOnly", Boolean(checked))}
+          onCheckedChange={(v) => setFilters({ remoteOnly: v })}
           className="data-[state=checked]:bg-brand"
         />
       </div>
 
-      {/* Salary Range */}
       <div className="space-y-1.5">
         <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
           Salary range (₹)
@@ -200,10 +200,9 @@ export function FilterPanel({
             placeholder="Min"
             value={filters.salaryMin ?? ""}
             onChange={(e) =>
-              update(
-                "salaryMin",
-                e.target.value ? Number(e.target.value) : null,
-              )
+              setFilters({
+                salaryMin: e.target.value ? Number(e.target.value) : null,
+              })
             }
             className="h-9 text-sm"
           />
@@ -212,17 +211,15 @@ export function FilterPanel({
             placeholder="Max"
             value={filters.salaryMax ?? ""}
             onChange={(e) =>
-              update(
-                "salaryMax",
-                e.target.value ? Number(e.target.value) : null,
-              )
+              setFilters({
+                salaryMax: e.target.value ? Number(e.target.value) : null,
+              })
             }
             className="h-9 text-sm"
           />
         </div>
       </div>
 
-      {/* Min Openings */}
       <div className="space-y-1.5">
         <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
           Min. openings
@@ -232,16 +229,14 @@ export function FilterPanel({
           placeholder="e.g. 3"
           value={filters.minOpenings ?? ""}
           onChange={(e) =>
-            update(
-              "minOpenings",
-              e.target.value ? Number(e.target.value) : null,
-            )
+            setFilters({
+              minOpenings: e.target.value ? Number(e.target.value) : null,
+            })
           }
           className="h-9 text-sm"
         />
       </div>
 
-      {/* Created Within */}
       <div className="space-y-1.5">
         <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
           Posted within
@@ -252,11 +247,9 @@ export function FilterPanel({
               ? "all"
               : String(filters.createdWithinDays)
           }
-          onValueChange={(value) => {
-            const nextValue = value === "all" ? null : Number(value);
-            if (nextValue === filters.createdWithinDays) return;
-            update("createdWithinDays", nextValue);
-          }}
+          onValueChange={(v) =>
+            setFilters({ createdWithinDays: v === "all" ? null : Number(v) })
+          }
         >
           <SelectTrigger className="h-9 text-sm">
             <SelectValue />
@@ -269,7 +262,6 @@ export function FilterPanel({
         </Select>
       </div>
 
-      {/* Reset button — visible when filters are active */}
       <AnimatePresence>
         {hasActiveFilters && (
           <motion.div
@@ -282,12 +274,7 @@ export function FilterPanel({
               variant="outline"
               size="sm"
               className="w-full text-muted-foreground hover:text-foreground"
-              onClick={() =>
-                onChange({
-                  ...DEFAULT_FILTERS,
-                  sortBy: filters.sortBy,
-                })
-              }
+              onClick={resetFilters}
             >
               Reset filters
             </Button>
@@ -299,32 +286,19 @@ export function FilterPanel({
 
   return (
     <>
-      {/* Desktop — sticky sidebar */}
-      <aside className="hidden lg:block sticky top-6 self-start rounded-xl border bg-card p-5 space-y-0">
+      <aside className="hidden lg:block sticky top-6 self-start rounded-xl border bg-card p-5">
         <div className="flex items-center gap-2 mb-5">
           <SlidersHorizontal className="h-4 w-4 text-muted-foreground" />
           <span className="text-sm font-medium">Filters</span>
-          {hasActiveFilters && (
+          {activeCount > 0 && (
             <span className="ml-auto flex h-5 w-5 items-center justify-center rounded-full bg-brand text-[10px] font-bold text-brand-foreground">
-              {
-                [
-                  filters.location,
-                  ...filters.employmentTypes,
-                  filters.jobCategory,
-                  filters.remoteOnly ? "r" : null,
-                  filters.salaryMin,
-                  filters.salaryMax,
-                  filters.minOpenings,
-                  filters.createdWithinDays,
-                ].filter(Boolean).length
-              }
+              {activeCount}
             </span>
           )}
         </div>
         {panelContent}
       </aside>
 
-      {/* Mobile — collapsible */}
       <div className="lg:hidden rounded-xl border bg-card overflow-hidden">
         <button
           className="flex w-full items-center justify-between px-5 py-4 text-sm font-medium"
@@ -334,9 +308,9 @@ export function FilterPanel({
           <div className="flex items-center gap-2">
             <SlidersHorizontal className="h-4 w-4 text-muted-foreground" />
             Filters
-            {hasActiveFilters && (
+            {activeCount > 0 && (
               <span className="flex h-5 w-5 items-center justify-center rounded-full bg-brand text-[10px] font-bold text-brand-foreground">
-                •
+                {activeCount}
               </span>
             )}
           </div>

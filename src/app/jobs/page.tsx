@@ -1,14 +1,15 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useQueryStates } from "nuqs";
+import { filterParsers } from "@/lib/search-params";
 import { useJobs } from "@/hooks/use-jobs";
 import { JobList } from "@/components/jobs/job-list";
 import { JobDrawer } from "@/components/jobs/job-drawer";
 import { ThemeToggle } from "@/components/shared/theme-toggle";
-import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import { useJobFilters } from "@/hooks/use-job-filters";
-import type { JobFilters, SortOption } from "@/types/filters";
 import type { Job } from "@/types/job";
+import type { SortOption } from "@/types/filters";
 import { FilterPanel } from "@/components/filters/filter-panel";
 import { FilterSummary } from "@/components/filters/filter-summary";
 import {
@@ -27,30 +28,18 @@ import { EmptyState } from "@/components/states/empty-state";
 import { ErrorState } from "@/components/states/error-state";
 import Link from "next/link";
 import { ArrowLeft, Download, FileText } from "lucide-react";
-
-export const DEFAULT_FILTERS: JobFilters = {
-  search: "",
-  location: "",
-  employmentTypes: [],
-  jobCategory: "",
-  remoteOnly: false,
-  salaryMin: null,
-  salaryMax: null,
-  minOpenings: null,
-  createdWithinDays: null,
-  sortBy: "newest",
-};
+import type { JobFilters } from "@/types/filters";
 
 export default function JobsPage() {
-  const [filters, setFilters] = useState<JobFilters>(DEFAULT_FILTERS);
-  const [searchInput, setSearchInput] = useState("");
+  const [filters, setFilters] = useQueryStates(filterParsers, {
+    shallow: true,
+  });
+
   const [viewMode, setViewMode] = useState<"pagination" | "infinite">(
     "pagination",
   );
   const [page, setPage] = useState(1);
   const [allJobs, setAllJobs] = useState<Job[]>([]);
-
-  // Drawer state
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
 
   const limit = 10;
@@ -58,7 +47,17 @@ export default function JobsPage() {
 
   const jobs = data?.data ?? [];
   const sourceJobs = viewMode === "infinite" ? allJobs : jobs;
-  const filteredJobs = useJobFilters(sourceJobs, filters);
+
+  const filtersAsJobFilters: JobFilters = {
+    ...filters,
+    salaryMin: filters.salaryMin ?? null,
+    salaryMax: filters.salaryMax ?? null,
+    minOpenings: filters.minOpenings ?? null,
+    createdWithinDays: filters.createdWithinDays ?? null,
+    sortBy: filters.sortBy as SortOption,
+  };
+
+  const filteredJobs = useJobFilters(sourceJobs, filtersAsJobFilters);
 
   const currentPage = data?.current_page ?? 1;
   const totalPages = data?.last_page ?? 1;
@@ -68,12 +67,6 @@ export default function JobsPage() {
   const employmentTypes = Array.from(
     new Set(jobs.map((j) => j.employment_type)),
   );
-
-  const debouncedSearch = useDebouncedValue(searchInput, 500);
-
-  useEffect(() => {
-    setFilters((prev) => ({ ...prev, search: debouncedSearch }));
-  }, [debouncedSearch]);
 
   useEffect(() => {
     if (viewMode !== "infinite") {
@@ -100,7 +93,7 @@ export default function JobsPage() {
     },
     viewMode === "infinite" && hasNextPage,
   );
-
+  // reset infinite scroll on filter change
   const filterKey = JSON.stringify(filters);
   useEffect(() => {
     if (viewMode !== "infinite") return;
@@ -108,9 +101,23 @@ export default function JobsPage() {
     setAllJobs([]);
   }, [filterKey, viewMode]);
 
+  function clearAllFilters() {
+    setFilters({
+      search: "",
+      location: "",
+      employmentTypes: [],
+      jobCategory: "",
+      remoteOnly: false,
+      salaryMin: null,
+      salaryMax: null,
+      minOpenings: null,
+      createdWithinDays: null,
+      sortBy: "newest",
+    });
+  }
+
   return (
     <main className="min-h-screen bg-background">
-      {/* Page header */}
       <header className="border-b bg-card/80 backdrop-blur-sm sticky top-0 z-20">
         <div className="container mx-auto max-w-7xl flex items-center justify-between py-3.5 px-6">
           <div className="flex items-center gap-4">
@@ -143,7 +150,6 @@ export default function JobsPage() {
               className="h-8 gap-1.5 text-xs text-muted-foreground hover:text-foreground"
               onClick={() => exportJobsToCSV(filteredJobs)}
               disabled={!filteredJobs.length}
-              title="Export CSV"
             >
               <Download className="h-3.5 w-3.5" />
               <span className="hidden sm:inline">CSV</span>
@@ -153,9 +159,8 @@ export default function JobsPage() {
               variant="ghost"
               size="sm"
               className="h-8 gap-1.5 text-xs text-muted-foreground hover:text-foreground"
-              onClick={() => exportJobsToPDF(filteredJobs, filters)}
+              onClick={() => exportJobsToPDF(filteredJobs, filtersAsJobFilters)}
               disabled={!filteredJobs.length}
-              title="Export PDF"
             >
               <FileText className="h-3.5 w-3.5" />
               <span className="hidden sm:inline">PDF</span>
@@ -170,17 +175,12 @@ export default function JobsPage() {
       <div className="container mx-auto max-w-7xl py-6 px-6">
         <div className="grid items-start gap-6 lg:grid-cols-[280px_1fr]">
           <FilterPanel
-            filters={filters}
-            onChange={setFilters}
-            searchInput={searchInput}
-            onSearchChange={setSearchInput}
             locations={locations}
             categories={categories}
             employmentTypes={employmentTypes}
           />
 
           <div className="min-w-0">
-            {/* Toolbar */}
             <div className="mb-4 flex items-center justify-between gap-3 flex-wrap">
               <div className="flex items-center gap-1 rounded-lg border bg-card p-1">
                 <Button
@@ -211,9 +211,7 @@ export default function JobsPage() {
 
               <Select
                 value={filters.sortBy}
-                onValueChange={(v) =>
-                  setFilters((prev) => ({ ...prev, sortBy: v as SortOption }))
-                }
+                onValueChange={(v) => setFilters({ sortBy: v as SortOption })}
               >
                 <SelectTrigger className="h-9 w-44 text-sm">
                   <SelectValue />
@@ -230,7 +228,8 @@ export default function JobsPage() {
               </Select>
             </div>
 
-            <FilterSummary filters={filters} onChange={setFilters} />
+            {/* FilterSummary now reads from URL state */}
+            <FilterSummary />
 
             <JobList
               jobs={filteredJobs}
@@ -242,7 +241,7 @@ export default function JobsPage() {
             {isError && <ErrorState onRetry={() => window.location.reload()} />}
 
             {!isLoading && !isError && filteredJobs.length === 0 && (
-              <EmptyState onClear={() => setFilters(DEFAULT_FILTERS)} />
+              <EmptyState onClear={clearAllFilters} />
             )}
 
             {viewMode === "infinite" && hasNextPage && (
@@ -260,7 +259,6 @@ export default function JobsPage() {
         </div>
       </div>
 
-      {/* Job detail drawer */}
       <JobDrawer job={selectedJob} onClose={() => setSelectedJob(null)} />
     </main>
   );

@@ -80,15 +80,6 @@ export default function LandingPage() {
 
       {/* Hero */}
       <section className="container mx-auto flex max-w-4xl flex-1 flex-col items-center justify-center px-6 pt-16 pb-12 text-center">
-        <motion.div
-          initial={{ opacity: 0, y: 24 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, ease: "easeOut" }}
-        >
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-brand/30 bg-brand-muted px-3 py-1 text-xs font-medium text-brand-foreground dark:text-brand mb-6">
-            Frontend assignment → Portfolio project
-          </span>
-        </motion.div>
 
         <motion.h1
           className="text-4xl font-bold tracking-tight sm:text-6xl text-foreground leading-[1.1]"

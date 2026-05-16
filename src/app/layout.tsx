@@ -1,10 +1,11 @@
 //@ts-ignore
-import "./globals.css"
+import "./globals.css";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { ThemeProvider } from "@/providers/theme-provider";
 import { QueryProvider } from "@/providers/query-provider";
 import { PageTransition } from "@/components/shared/page-transition";
+import { NuqsAdapter } from "nuqs/adapters/next/app";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -32,11 +33,13 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background text-foreground`}
       >
-        <ThemeProvider>
-          <QueryProvider>
-            <PageTransition>{children}</PageTransition>
-          </QueryProvider>
-        </ThemeProvider>
+        <NuqsAdapter>
+          <ThemeProvider>
+            <QueryProvider>
+              <PageTransition>{children}</PageTransition>
+            </QueryProvider>
+          </ThemeProvider>
+        </NuqsAdapter>
       </body>
     </html>
   );
