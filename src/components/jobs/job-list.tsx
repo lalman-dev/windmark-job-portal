@@ -9,9 +9,15 @@ interface JobListProps {
   jobs?: Job[];
   isLoading: boolean;
   isError: boolean;
+  onJobClick?: (job: Job) => void;
 }
 
-export function JobList({ jobs, isLoading, isError }: JobListProps) {
+export function JobList({
+  jobs,
+  isLoading,
+  isError,
+  onJobClick,
+}: JobListProps) {
   if (isError) return null;
 
   if (isLoading) {
@@ -37,7 +43,7 @@ export function JobList({ jobs, isLoading, isError }: JobListProps) {
         className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3"
       >
         {jobs.map((job, index) => (
-          <JobCard key={job.id} job={job} index={index} />
+          <JobCard key={job.id} job={job} index={index} onClick={onJobClick} />
         ))}
       </motion.div>
     </AnimatePresence>

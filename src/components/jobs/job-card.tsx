@@ -5,29 +5,19 @@ import { Badge } from "@/components/ui/badge";
 import { motion } from "framer-motion";
 import type { Job } from "@/types/job";
 import { MapPin, Clock, Users, ArrowUpRight } from "lucide-react";
+import { getEmploymentBadgeClass } from "@/lib/badge-utils";
 
 interface JobCardProps {
   job: Job;
   index?: number;
-}
-
-function getEmploymentBadgeClass(type: string): string {
-  const t = type.toLowerCase().replace(/[^a-z]/g, "");
-  if (t.includes("fulltime") || t === "full") return "badge-full-time";
-  if (t.includes("parttime") || t === "part") return "badge-part-time";
-  if (t.includes("contract") || t.includes("freelance"))
-    return "badge-contract";
-  if (t.includes("intern")) return "badge-internship";
-  return "badge-default";
+  onClick?: (job: Job) => void;
 }
 
 function formatDeadline(dateStr: string): string {
   const date = new Date(dateStr);
-  const now = new Date();
   const diffDays = Math.ceil(
-    (date.getTime() - now.getTime()) / (1000 * 60 * 60 * 24),
+    (date.getTime() - Date.now()) / (1000 * 60 * 60 * 24),
   );
-
   if (diffDays < 0) return "Closed";
   if (diffDays === 0) return "Closes today";
   if (diffDays <= 7) return `${diffDays}d left`;
@@ -40,7 +30,7 @@ function formatSalary(from: number, to: number): string {
   return `${fmt(from)} – ${fmt(to)}`;
 }
 
-export function JobCard({ job, index = 0 }: JobCardProps) {
+export function JobCard({ job, index = 0, onClick }: JobCardProps) {
   const isRemote = job.is_remote_work === 1;
   const badgeClass = getEmploymentBadgeClass(job.employment_type);
   const deadline = formatDeadline(job.application_deadline);
@@ -57,7 +47,19 @@ export function JobCard({ job, index = 0 }: JobCardProps) {
       transition={{ duration: 0.3, delay: index * 0.04, ease: "easeOut" }}
       className="group h-full"
     >
-      <Card className="h-full cursor-pointer border transition-all duration-200 ease-out hover:border-brand/50 hover:shadow-md hover:-translate-y-0.5 active:translate-y-0">
+      <Card
+        className="h-full cursor-pointer border transition-all duration-200 ease-out hover:border-brand/50 hover:shadow-md hover:-translate-y-0.5 active:translate-y-0"
+        onClick={() => onClick?.(job)}
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            onClick?.(job);
+          }
+        }}
+        aria-label={`View details for ${job.title} at ${job.company}`}
+      >
         <CardHeader className="pb-3 space-y-2.5">
           <div className="flex items-start justify-between gap-2">
             <h3 className="line-clamp-2 text-base font-semibold leading-snug group-hover:text-brand transition-colors duration-150">
@@ -113,9 +115,7 @@ export function JobCard({ job, index = 0 }: JobCardProps) {
                 {job.number_of_opening}
               </span>
               <span
-                className={`flex items-center gap-1 ${
-                  isUrgent ? "text-destructive font-medium" : ""
-                }`}
+                className={`flex items-center gap-1 ${isUrgent ? "text-destructive font-medium" : ""}`}
               >
                 <Clock className="h-3 w-3" />
                 {deadline}

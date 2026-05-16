@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useJobs } from "@/hooks/use-jobs";
 import { JobList } from "@/components/jobs/job-list";
+import { JobDrawer } from "@/components/jobs/job-drawer";
 import { ThemeToggle } from "@/components/shared/theme-toggle";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import { useJobFilters } from "@/hooks/use-job-filters";
@@ -48,6 +49,9 @@ export default function JobsPage() {
   );
   const [page, setPage] = useState(1);
   const [allJobs, setAllJobs] = useState<Job[]>([]);
+
+  // Drawer state
+  const [selectedJob, setSelectedJob] = useState<Job | null>(null);
 
   const limit = 10;
   const { data, isLoading, isError } = useJobs(page, limit);
@@ -133,7 +137,6 @@ export default function JobsPage() {
           </div>
 
           <div className="flex items-center gap-2">
-            {/* Export buttons */}
             <Button
               variant="ghost"
               size="sm"
@@ -177,9 +180,8 @@ export default function JobsPage() {
           />
 
           <div className="min-w-0">
-            {/* Toolbar row */}
+            {/* Toolbar */}
             <div className="mb-4 flex items-center justify-between gap-3 flex-wrap">
-              {/* View mode toggle */}
               <div className="flex items-center gap-1 rounded-lg border bg-card p-1">
                 <Button
                   variant={viewMode === "pagination" ? "default" : "ghost"}
@@ -207,7 +209,6 @@ export default function JobsPage() {
                 </Button>
               </div>
 
-              {/* Sort */}
               <Select
                 value={filters.sortBy}
                 onValueChange={(v) =>
@@ -229,14 +230,13 @@ export default function JobsPage() {
               </Select>
             </div>
 
-            {/* Active filter chips */}
             <FilterSummary filters={filters} onChange={setFilters} />
 
-            {/* Results */}
             <JobList
               jobs={filteredJobs}
               isLoading={isLoading}
               isError={isError}
+              onJobClick={setSelectedJob}
             />
 
             {isError && <ErrorState onRetry={() => window.location.reload()} />}
@@ -259,6 +259,9 @@ export default function JobsPage() {
           </div>
         </div>
       </div>
+
+      {/* Job detail drawer */}
+      <JobDrawer job={selectedJob} onClose={() => setSelectedJob(null)} />
     </main>
   );
 }
