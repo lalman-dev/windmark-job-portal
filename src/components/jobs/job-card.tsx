@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { motion } from "framer-motion";
@@ -30,7 +31,7 @@ function formatSalary(from: number, to: number): string {
   return `${fmt(from)} – ${fmt(to)}`;
 }
 
-export function JobCard({ job, index = 0, onClick }: JobCardProps) {
+function JobCardComponent({ job, index = 0, onClick }: JobCardProps) {
   const isRemote = job.is_remote_work === 1;
   const badgeClass = getEmploymentBadgeClass(job.employment_type);
   const deadline = formatDeadline(job.application_deadline);
@@ -68,7 +69,7 @@ export function JobCard({ job, index = 0, onClick }: JobCardProps) {
             <ArrowUpRight className="h-4 w-4 shrink-0 text-muted-foreground/40 transition-all duration-150 group-hover:text-brand group-hover:translate-x-0.5 group-hover:-translate-y-0.5 mt-0.5" />
           </div>
 
-          <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+          <div className="flex min-w-0 items-center gap-1.5 text-sm text-muted-foreground">
             <MapPin className="h-3.5 w-3.5 shrink-0" />
             <span className="truncate">
               {job.company} · {job.location}
@@ -81,7 +82,6 @@ export function JobCard({ job, index = 0, onClick }: JobCardProps) {
             {job.description}
           </p>
 
-          {/* Badge row */}
           <div className="flex flex-wrap items-center gap-1.5">
             <span
               className={`inline-flex items-center rounded-md border px-2 py-0.5 text-xs font-medium ${badgeClass}`}
@@ -103,7 +103,6 @@ export function JobCard({ job, index = 0, onClick }: JobCardProps) {
             )}
           </div>
 
-          {/* Footer row */}
           <div className="flex items-center justify-between pt-0.5 border-t border-border/60">
             <span className="text-sm font-semibold text-foreground">
               {formatSalary(job.salary_from, job.salary_to)}
@@ -127,3 +126,22 @@ export function JobCard({ job, index = 0, onClick }: JobCardProps) {
     </motion.div>
   );
 }
+
+function areEqual(prev: JobCardProps, next: JobCardProps): boolean {
+  return (
+    prev.job.id === next.job.id &&
+    prev.job.title === next.job.title &&
+    prev.job.company === next.job.company &&
+    prev.job.location === next.job.location &&
+    prev.job.salary_from === next.job.salary_from &&
+    prev.job.salary_to === next.job.salary_to &&
+    prev.job.employment_type === next.job.employment_type &&
+    prev.job.job_category === next.job.job_category &&
+    prev.job.is_remote_work === next.job.is_remote_work &&
+    prev.job.number_of_opening === next.job.number_of_opening &&
+    prev.job.application_deadline === next.job.application_deadline &&
+    prev.index === next.index
+  );
+}
+
+export const JobCard = memo(JobCardComponent, areEqual);
