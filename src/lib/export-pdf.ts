@@ -1,14 +1,21 @@
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+
+import type { UserOptions } from "jspdf-autotable";
 import type { Job } from "@/types/job";
 import type { JobFilters } from "@/types/filters";
+
+interface JsPDFWithAutoTable extends jsPDF {
+  lastAutoTable: {
+    finalY: number;
+  };
+}
 
 export function exportJobsToPDF(jobs: Job[], filters: JobFilters) {
   if (!jobs.length) return;
 
-  const doc = new jsPDF();
+  const doc = new jsPDF() as JsPDFWithAutoTable;
 
-  // Title
   doc.setFontSize(16);
   doc.text("Filtered Job Results", 14, 20);
 
@@ -52,7 +59,7 @@ export function exportJobsToPDF(jobs: Job[], filters: JobFilters) {
     job.created_at,
   ]);
 
-  autoTable(doc, {
+  const tableOptions: UserOptions = {
     startY: y,
     head: [
       [
@@ -71,10 +78,11 @@ export function exportJobsToPDF(jobs: Job[], filters: JobFilters) {
     body: tableData,
     styles: { fontSize: 7 },
     headStyles: { fillColor: [40, 40, 40] },
-  });
+  };
 
-  // Footer
-  const finalY = (doc as any).lastAutoTable.finalY || 20;
+  autoTable(doc, tableOptions);
+
+  const finalY = doc.lastAutoTable.finalY || 20;
 
   doc.setFontSize(9);
   doc.text(`Generated on: ${new Date().toLocaleString()}`, 14, finalY + 10);

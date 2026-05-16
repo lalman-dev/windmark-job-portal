@@ -1,9 +1,13 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import type { RefObject } from "react";
 
-export function useIntersection(onIntersect: () => void, enabled: boolean) {
-  const ref = useRef<HTMLDivElement | null>(null);
+export function useIntersection(
+  onIntersect: () => void,
+  enabled: boolean,
+): RefObject<HTMLDivElement> {
+  const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!enabled) return;

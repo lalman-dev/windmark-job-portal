@@ -6,7 +6,7 @@ import { JobList } from "@/components/jobs/job-list";
 import { ThemeToggle } from "@/components/shared/theme-toggle";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import { useJobFilters } from "@/hooks/use-job-filters";
-import type { JobFilters } from "@/types/filters";
+import type { JobFilters, SortOption } from "@/types/filters";
 import type { Job } from "@/types/job";
 import { FilterPanel } from "@/components/filters/filter-panel";
 import { FilterSummary } from "@/components/filters/filter-summary";
@@ -25,19 +25,21 @@ import { exportJobsToPDF } from "@/lib/export-pdf";
 import { EmptyState } from "@/components/states/empty-state";
 import { ErrorState } from "@/components/states/error-state";
 
+const DEFAULT_FILTERS: JobFilters = {
+  search: "",
+  location: "",
+  employmentTypes: [],
+  jobCategory: "",
+  remoteOnly: false,
+  salaryMin: null,
+  salaryMax: null,
+  minOpenings: null,
+  createdWithinDays: null,
+  sortBy: "newest",
+};
+
 export default function JobsPage() {
-  const [filters, setFilters] = useState<JobFilters>({
-    search: "",
-    location: "",
-    employmentTypes: [],
-    jobCategory: "",
-    remoteOnly: false,
-    salaryMin: null,
-    salaryMax: null,
-    minOpenings: null,
-    createdWithinDays: null,
-    sortBy: "newest",
-  });
+  const [filters, setFilters] = useState<JobFilters>(DEFAULT_FILTERS);
 
   const [searchInput, setSearchInput] = useState("");
   const [viewMode, setViewMode] = useState<"pagination" | "infinite">(
@@ -166,7 +168,7 @@ export default function JobsPage() {
                 onValueChange={(v) =>
                   setFilters((prev) => ({
                     ...prev,
-                    sortBy: v as any,
+                    sortBy: v as SortOption,
                   }))
                 }
               >
@@ -209,22 +211,7 @@ export default function JobsPage() {
           {isError && <ErrorState onRetry={() => window.location.reload()} />}
 
           {!isLoading && !isError && filteredJobs.length === 0 && (
-            <EmptyState
-              onClear={() =>
-                setFilters({
-                  search: "",
-                  location: "",
-                  employmentTypes: [],
-                  jobCategory: "",
-                  remoteOnly: false,
-                  salaryMin: null,
-                  salaryMax: null,
-                  minOpenings: null,
-                  createdWithinDays: null,
-                  sortBy: "newest",
-                })
-              }
-            />
+            <EmptyState onClear={() => setFilters(DEFAULT_FILTERS)} />
           )}
           {/* Pagination and Infinite scroll */}
           {viewMode === "infinite" && hasNextPage && (
