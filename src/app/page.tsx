@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/shared/theme-toggle";
-import { motion } from "framer-motion";
+import { motion, type Variants } from "framer-motion";
 import {
   Search,
   SlidersHorizontal,
@@ -46,7 +46,7 @@ const FEATURES = [
   },
 ];
 
-const containerVariants = {
+const containerVariants: Variants = {
   hidden: {},
   show: {
     transition: {
@@ -55,16 +55,21 @@ const containerVariants = {
   },
 };
 
-const itemVariants = {
+const itemVariants: Variants = {
   hidden: { opacity: 0, y: 20 },
-  show: { opacity: 1, y: 0 },
+  show: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.4,
+      ease: "easeOut",
+    },
+  },
 };
-
-const itemTransition = { duration: 0.4, ease: "easeOut" as const };
 
 export default function LandingPage() {
   return (
-    <main className="flex min-h-screen flex-col bg-background text-foreground">
+    <main className="flex min-h-screen flex-col text-foreground">
       {/* Header */}
       <header className="container mx-auto flex max-w-7xl items-center justify-between py-5 px-6">
         <div className="flex items-center gap-2">
@@ -80,7 +85,6 @@ export default function LandingPage() {
 
       {/* Hero */}
       <section className="container mx-auto flex max-w-4xl flex-1 flex-col items-center justify-center px-6 pt-16 pb-12 text-center">
-
         <motion.h1
           className="text-4xl font-bold tracking-tight sm:text-6xl text-foreground leading-[1.1]"
           initial={{ opacity: 0, y: 24 }}
@@ -89,7 +93,7 @@ export default function LandingPage() {
         >
           Find work that fits
           <br />
-          <span className="text-brand">your ambitions.</span>
+          <span className="text-brand font-stretch-extra-expanded">your ambitions.</span>
         </motion.h1>
 
         <motion.p
@@ -131,7 +135,6 @@ export default function LandingPage() {
             <motion.div
               key={stat.label}
               variants={itemVariants}
-              transition={itemTransition}
               className="flex flex-col items-center gap-1 rounded-xl border bg-card px-4 py-4"
             >
               <span className="text-xl font-bold text-brand">{stat.value}</span>
@@ -158,7 +161,6 @@ export default function LandingPage() {
               <motion.div
                 key={feature.title}
                 variants={itemVariants}
-                transition={itemTransition}
                 className="group rounded-xl border bg-card p-5 transition-colors hover:border-brand/40"
               >
                 <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-lg bg-brand-muted">

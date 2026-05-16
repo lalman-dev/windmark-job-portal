@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useQueryStates } from "nuqs";
 import { filterParsers } from "@/lib/search-params";
 import { useJobs } from "@/hooks/use-jobs";
@@ -9,7 +9,7 @@ import { JobDrawer } from "@/components/jobs/job-drawer";
 import { ThemeToggle } from "@/components/shared/theme-toggle";
 import { useJobFilters } from "@/hooks/use-job-filters";
 import type { Job } from "@/types/job";
-import type { SortOption } from "@/types/filters";
+import type { SortOption, JobFilters } from "@/types/filters";
 import { FilterPanel } from "@/components/filters/filter-panel";
 import { FilterSummary } from "@/components/filters/filter-summary";
 import {
@@ -28,7 +28,6 @@ import { EmptyState } from "@/components/states/empty-state";
 import { ErrorState } from "@/components/states/error-state";
 import Link from "next/link";
 import { ArrowLeft, Download, FileText } from "lucide-react";
-import type { JobFilters } from "@/types/filters";
 
 export default function JobsPage() {
   const [filters, setFilters] = useQueryStates(filterParsers, {
@@ -73,27 +72,32 @@ export default function JobsPage() {
       setAllJobs(jobs);
       return;
     }
+
     if (page === 1) {
       setAllJobs(jobs);
       return;
     }
+
     setAllJobs((prev) => {
       const map = new Map(prev.map((j) => [j.id, j]));
       jobs.forEach((j) => map.set(j.id, j));
       return Array.from(map.values());
     });
-  }, [page, viewMode]);
+  }, [data, viewMode]);
+
+  const handleLoadMore = useCallback(() => {
+    if (viewMode !== "infinite") return;
+    if (!hasNextPage) return;
+    if (isLoading) return;
+    setPage((p) => p + 1);
+  }, [viewMode, hasNextPage, isLoading]);
 
   const loadMoreRef = useIntersection(
-    () => {
-      if (viewMode !== "infinite") return;
-      if (!hasNextPage) return;
-      if (isLoading) return;
-      setPage((p) => p + 1);
-    },
+    handleLoadMore,
     viewMode === "infinite" && hasNextPage,
   );
-  // reset infinite scroll on filter change
+
+  // Reset when filters change in infinite mode
   const filterKey = JSON.stringify(filters);
   useEffect(() => {
     if (viewMode !== "infinite") return;
@@ -117,7 +121,7 @@ export default function JobsPage() {
   }
 
   return (
-    <main className="min-h-screen bg-background">
+    <main className="min-h-screen">
       <header className="border-b bg-card/80 backdrop-blur-sm sticky top-0 z-20">
         <div className="container mx-auto max-w-7xl flex items-center justify-between py-3.5 px-6">
           <div className="flex items-center gap-4">
@@ -228,7 +232,6 @@ export default function JobsPage() {
               </Select>
             </div>
 
-            {/* FilterSummary now reads from URL state */}
             <FilterSummary />
 
             <JobList
@@ -237,6 +240,16 @@ export default function JobsPage() {
               isError={isError}
               onJobClick={setSelectedJob}
             />
+            {viewMode === "infinite" && isLoading && page > 1 && (
+              <div className="mt-4 space-y-3">
+                {Array.from({ length: 3 }).map((_, i) => (
+                  <div
+                    key={i}
+                    className="h-32 animate-pulse rounded-xl border bg-card"
+                  />
+                ))}
+              </div>
+            )}
 
             {isError && <ErrorState onRetry={() => window.location.reload()} />}
 
@@ -245,7 +258,7 @@ export default function JobsPage() {
             )}
 
             {viewMode === "infinite" && hasNextPage && (
-              <div ref={loadMoreRef} className="h-12" />
+              <div ref={loadMoreRef} className="h-10" />
             )}
 
             {viewMode === "pagination" && filteredJobs.length > 0 && (
