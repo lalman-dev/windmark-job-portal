@@ -24,8 +24,10 @@ import { exportJobsToCSV } from "@/lib/export-csv";
 import { exportJobsToPDF } from "@/lib/export-pdf";
 import { EmptyState } from "@/components/states/empty-state";
 import { ErrorState } from "@/components/states/error-state";
+import Link from "next/link";
+import { ArrowLeft, Download, FileText } from "lucide-react";
 
-const DEFAULT_FILTERS: JobFilters = {
+export const DEFAULT_FILTERS: JobFilters = {
   search: "",
   location: "",
   employmentTypes: [],
@@ -40,7 +42,6 @@ const DEFAULT_FILTERS: JobFilters = {
 
 export default function JobsPage() {
   const [filters, setFilters] = useState<JobFilters>(DEFAULT_FILTERS);
-
   const [searchInput, setSearchInput] = useState("");
   const [viewMode, setViewMode] = useState<"pagination" | "infinite">(
     "pagination",
@@ -67,10 +68,7 @@ export default function JobsPage() {
   const debouncedSearch = useDebouncedValue(searchInput, 500);
 
   useEffect(() => {
-    setFilters((prev) => ({
-      ...prev,
-      search: debouncedSearch,
-    }));
+    setFilters((prev) => ({ ...prev, search: debouncedSearch }));
   }, [debouncedSearch]);
 
   useEffect(() => {
@@ -78,12 +76,10 @@ export default function JobsPage() {
       setAllJobs(jobs);
       return;
     }
-
     if (page === 1) {
       setAllJobs(jobs);
       return;
     }
-
     setAllJobs((prev) => {
       const map = new Map(prev.map((j) => [j.id, j]));
       jobs.forEach((j) => map.set(j.id, j));
@@ -96,134 +92,171 @@ export default function JobsPage() {
       if (viewMode !== "infinite") return;
       if (!hasNextPage) return;
       if (isLoading) return;
-
       setPage((p) => p + 1);
     },
     viewMode === "infinite" && hasNextPage,
   );
 
   const filterKey = JSON.stringify(filters);
-
   useEffect(() => {
     if (viewMode !== "infinite") return;
-
     setPage(1);
     setAllJobs([]);
   }, [filterKey, viewMode]);
 
   return (
-    <main className="container mx-auto max-w-7xl py-8 px-4">
-      <div className="mb-8 flex items-start justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">
-            Windmark Job Listings
-          </h1>
-          <p className="text-md text-muted-foreground">
-            Discover opportunities tailored for you
-          </p>
+    <main className="min-h-screen bg-background">
+      {/* Page header */}
+      <header className="border-b bg-card/80 backdrop-blur-sm sticky top-0 z-20">
+        <div className="container mx-auto max-w-7xl flex items-center justify-between py-3.5 px-6">
+          <div className="flex items-center gap-4">
+            <Link
+              href="/"
+              className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <ArrowLeft className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Back</span>
+            </Link>
+
+            <div className="h-4 w-px bg-border" />
+
+            <div>
+              <h1 className="text-sm font-semibold leading-none">
+                Windmark Jobs
+              </h1>
+              <p className="text-xs text-muted-foreground mt-0.5 hidden sm:block">
+                {isLoading
+                  ? "Loading…"
+                  : `${filteredJobs.length} result${filteredJobs.length !== 1 ? "s" : ""}`}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            {/* Export buttons */}
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8 gap-1.5 text-xs text-muted-foreground hover:text-foreground"
+              onClick={() => exportJobsToCSV(filteredJobs)}
+              disabled={!filteredJobs.length}
+              title="Export CSV"
+            >
+              <Download className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">CSV</span>
+            </Button>
+
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8 gap-1.5 text-xs text-muted-foreground hover:text-foreground"
+              onClick={() => exportJobsToPDF(filteredJobs, filters)}
+              disabled={!filteredJobs.length}
+              title="Export PDF"
+            >
+              <FileText className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">PDF</span>
+            </Button>
+
+            <div className="h-4 w-px bg-border" />
+            <ThemeToggle />
+          </div>
         </div>
+      </header>
 
-        <ThemeToggle />
-      </div>
-      <div className="grid items-start gap-6 lg:grid-cols-[280px_1fr]">
-        <FilterPanel
-          filters={filters}
-          onChange={setFilters}
-          searchInput={searchInput}
-          onSearchChange={setSearchInput}
-          locations={locations}
-          categories={categories}
-          employmentTypes={employmentTypes}
-        />
+      <div className="container mx-auto max-w-7xl py-6 px-6">
+        <div className="grid items-start gap-6 lg:grid-cols-[280px_1fr]">
+          <FilterPanel
+            filters={filters}
+            onChange={setFilters}
+            searchInput={searchInput}
+            onSearchChange={setSearchInput}
+            locations={locations}
+            categories={categories}
+            employmentTypes={employmentTypes}
+          />
 
-        <div className="min-w-0">
-          <FilterSummary filters={filters} onChange={setFilters} />
+          <div className="min-w-0">
+            {/* Toolbar row */}
+            <div className="mb-4 flex items-center justify-between gap-3 flex-wrap">
+              {/* View mode toggle */}
+              <div className="flex items-center gap-1 rounded-lg border bg-card p-1">
+                <Button
+                  variant={viewMode === "pagination" ? "default" : "ghost"}
+                  size="sm"
+                  className={`h-7 px-3 text-xs ${
+                    viewMode === "pagination"
+                      ? "bg-foreground text-background hover:bg-foreground/90"
+                      : ""
+                  }`}
+                  onClick={() => setViewMode("pagination")}
+                >
+                  Paginated
+                </Button>
+                <Button
+                  variant={viewMode === "infinite" ? "default" : "ghost"}
+                  size="sm"
+                  className={`h-7 px-3 text-xs ${
+                    viewMode === "infinite"
+                      ? "bg-foreground text-background hover:bg-foreground/90"
+                      : ""
+                  }`}
+                  onClick={() => setViewMode("infinite")}
+                >
+                  Infinite
+                </Button>
+              </div>
 
-          <div className="mb-4 flex items-center justify-between gap-2">
-            <p className="text-sm text-muted-foreground" aria-live="polite">
-              Showing {filteredJobs.length} results
-            </p>
-
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => exportJobsToCSV(filteredJobs)}
-                disabled={!filteredJobs.length}
-              >
-                Export CSV
-              </Button>
-
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => exportJobsToPDF(filteredJobs, filters)}
-                disabled={!filteredJobs.length}
-              >
-                Export PDF
-              </Button>
-
+              {/* Sort */}
               <Select
                 value={filters.sortBy}
                 onValueChange={(v) =>
-                  setFilters((prev) => ({
-                    ...prev,
-                    sortBy: v as SortOption,
-                  }))
+                  setFilters((prev) => ({ ...prev, sortBy: v as SortOption }))
                 }
               >
-                <SelectTrigger className="w-50">
+                <SelectTrigger className="h-9 w-44 text-sm">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="newest">Newest First</SelectItem>
-                  <SelectItem value="oldest">Oldest First</SelectItem>
-                  <SelectItem value="salary_high">Salary High → Low</SelectItem>
-                  <SelectItem value="salary_low">Salary Low → High</SelectItem>
-                  <SelectItem value="openings">Most Openings</SelectItem>
+                  <SelectItem value="newest">Newest first</SelectItem>
+                  <SelectItem value="oldest">Oldest first</SelectItem>
+                  <SelectItem value="salary_high">
+                    Salary: high → low
+                  </SelectItem>
+                  <SelectItem value="salary_low">Salary: low → high</SelectItem>
+                  <SelectItem value="openings">Most openings</SelectItem>
                 </SelectContent>
               </Select>
             </div>
-          </div>
-          <div className="mb-4 flex items-center gap-2">
-            <Button
-              variant={viewMode === "pagination" ? "default" : "outline"}
-              size="sm"
-              onClick={() => setViewMode("pagination")}
-            >
-              Pagination
-            </Button>
 
-            <Button
-              variant={viewMode === "infinite" ? "default" : "outline"}
-              size="sm"
-              onClick={() => setViewMode("infinite")}
-            >
-              Infinite Scroll
-            </Button>
-          </div>
-          <JobList
-            jobs={filteredJobs}
-            isLoading={isLoading}
-            isError={isError}
-          />
-          {/* Error and Empty States */}
-          {isError && <ErrorState onRetry={() => window.location.reload()} />}
+            {/* Active filter chips */}
+            <FilterSummary filters={filters} onChange={setFilters} />
 
-          {!isLoading && !isError && filteredJobs.length === 0 && (
-            <EmptyState onClear={() => setFilters(DEFAULT_FILTERS)} />
-          )}
-          {/* Pagination and Infinite scroll */}
-          {viewMode === "infinite" && hasNextPage && (
-            <div ref={loadMoreRef} className="h-10" />
-          )}
-          {viewMode === "pagination" && filteredJobs.length > 0 && (
-            <PaginationControls
-              page={currentPage}
-              totalPages={totalPages}
-              onPageChange={setPage}
+            {/* Results */}
+            <JobList
+              jobs={filteredJobs}
+              isLoading={isLoading}
+              isError={isError}
             />
-          )}
+
+            {isError && <ErrorState onRetry={() => window.location.reload()} />}
+
+            {!isLoading && !isError && filteredJobs.length === 0 && (
+              <EmptyState onClear={() => setFilters(DEFAULT_FILTERS)} />
+            )}
+
+            {viewMode === "infinite" && hasNextPage && (
+              <div ref={loadMoreRef} className="h-12" />
+            )}
+
+            {viewMode === "pagination" && filteredJobs.length > 0 && (
+              <PaginationControls
+                page={currentPage}
+                totalPages={totalPages}
+                onPageChange={setPage}
+              />
+            )}
+          </div>
         </div>
       </div>
     </main>
