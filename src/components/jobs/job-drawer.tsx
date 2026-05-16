@@ -15,10 +15,12 @@ import {
   Wifi,
   IndianRupee,
   Tag,
+  ExternalLink,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { getEmploymentBadgeClass } from "@/lib/badge-utils";
+import Link from "next/link";
 
 interface JobDrawerProps {
   job: Job | null;
@@ -82,7 +84,7 @@ function MetaRow({
           {label}
         </p>
         <p
-          className={`text-sm font-medium wrap-break-word ${accent ? "text-brand" : "text-foreground"}`}
+          className={`text-sm font-medium wrap-break-words ${accent ? "text-brand" : "text-foreground"}`}
         >
           {value}
         </p>
@@ -104,6 +106,7 @@ export function JobDrawer({ job, onClose }: JobDrawerProps) {
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [handleKeyDown]);
 
+  // Lock body scroll when drawer is open
   useEffect(() => {
     if (job) {
       document.body.style.overflow = "hidden";
@@ -274,9 +277,9 @@ export function JobDrawer({ job, onClose }: JobDrawerProps) {
             </div>
 
             {/* Footer CTA */}
-            <div className="border-t px-6 py-4 bg-card/80 backdrop-blur-sm">
+            <div className="border-t px-6 py-4 bg-card/80 backdrop-blur-sm space-y-2">
               {deadline?.urgent && (
-                <p className="mb-2.5 text-xs font-medium text-destructive flex items-center gap-1.5">
+                <p className="text-xs font-medium text-destructive flex items-center gap-1.5">
                   <Clock className="h-3.5 w-3.5" />
                   {deadline.label} — apply soon
                 </p>
@@ -289,6 +292,14 @@ export function JobDrawer({ job, onClose }: JobDrawerProps) {
               >
                 Apply via email
               </Button>
+              {/* Link to the full detail page — better for sharing and SEO */}
+              <Link
+                href={`/jobs/${job.id}`}
+                className="flex items-center justify-center gap-1.5 w-full h-9 rounded-md border text-sm text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-colors"
+              >
+                <ExternalLink className="h-3.5 w-3.5" />
+                Open full page
+              </Link>
             </div>
           </motion.aside>
         </>

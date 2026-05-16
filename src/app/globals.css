@@ -45,7 +45,6 @@
   --radius-2xl: calc(var(--radius) + 8px);
   --radius-3xl: calc(var(--radius) + 12px);
   --radius-4xl: calc(var(--radius) + 16px);
-  /* Brand accent exposed as Tailwind token */
   --color-brand: var(--brand);
   --color-brand-foreground: var(--brand-foreground);
   --color-brand-muted: var(--brand-muted);
@@ -54,32 +53,27 @@
 :root {
   --radius: 0.625rem;
 
-  /* Surfaces — warm off-white, not pure white */
-  --background: oklch(0.985 0.004 75);
+  /* ── Light theme ──      */
+  --background: oklch(0.97 0.012 80);
   --foreground: oklch(0.13 0.01 260);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.13 0.01 260);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.13 0.01 260);
 
-  /* Primary — deep slate, not pure black */
   --primary: oklch(0.22 0.02 260);
   --primary-foreground: oklch(0.985 0 0);
 
-  /* Secondary — light warm grey */
   --secondary: oklch(0.95 0.006 75);
   --secondary-foreground: oklch(0.22 0.02 260);
 
-  /* Muted */
   --muted: oklch(0.94 0.006 75);
   --muted-foreground: oklch(0.52 0.02 260);
 
-  /* Accent — amber/gold brand color */
   --brand: oklch(0.78 0.17 75);
   --brand-foreground: oklch(0.22 0.05 60);
   --brand-muted: oklch(0.93 0.06 80);
 
-  /* Keep shadcn accent neutral */
   --accent: oklch(0.94 0.006 75);
   --accent-foreground: oklch(0.22 0.02 260);
 
@@ -87,6 +81,9 @@
   --border: oklch(0.88 0.008 260);
   --input: oklch(0.88 0.008 260);
   --ring: oklch(0.78 0.17 75);
+
+  /* grid dot for light mode */
+  --grid-dot: oklch(0.55 0.01 80 / 0.18);
 
   --chart-1: oklch(0.646 0.222 41.116);
   --chart-2: oklch(0.6 0.118 184.704);
@@ -105,35 +102,37 @@
 }
 
 .dark {
-  /* Surfaces — deep navy-slate */
-  --background: oklch(0.13 0.018 265);
+  /* ── Dark theme ───  */
+  --background: oklch(0.11 0.008 260);
   --foreground: oklch(0.94 0.006 75);
-  --card: oklch(0.17 0.018 265);
+  --card: oklch(0.16 0.01 260);
   --card-foreground: oklch(0.94 0.006 75);
-  --popover: oklch(0.17 0.018 265);
+  --popover: oklch(0.16 0.01 260);
   --popover-foreground: oklch(0.94 0.006 75);
 
   --primary: oklch(0.94 0.006 75);
-  --primary-foreground: oklch(0.17 0.018 265);
+  --primary-foreground: oklch(0.16 0.01 260);
 
-  --secondary: oklch(0.22 0.02 265);
+  --secondary: oklch(0.21 0.012 260);
   --secondary-foreground: oklch(0.94 0.006 75);
 
-  --muted: oklch(0.22 0.02 265);
-  --muted-foreground: oklch(0.62 0.02 260);
+  --muted: oklch(0.21 0.012 260);
+  --muted-foreground: oklch(0.6 0.012 260);
 
-  /* Brand stays warm amber in dark mode */
   --brand: oklch(0.78 0.17 75);
   --brand-foreground: oklch(0.14 0.04 60);
   --brand-muted: oklch(0.25 0.06 75);
 
-  --accent: oklch(0.22 0.02 265);
+  --accent: oklch(0.21 0.012 260);
   --accent-foreground: oklch(0.94 0.006 75);
 
   --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 12%);
+  --border: oklch(1 0 0 / 8%);
+  --input: oklch(1 0 0 / 10%);
   --ring: oklch(0.78 0.17 75);
+
+  /* grid dot color for dark mode */
+  --grid-dot: oklch(1 0 0 / 0.055);
 
   --chart-1: oklch(0.78 0.17 75);
   --chart-2: oklch(0.696 0.17 162.48);
@@ -141,13 +140,13 @@
   --chart-4: oklch(0.627 0.265 303.9);
   --chart-5: oklch(0.645 0.246 16.439);
 
-  --sidebar: oklch(0.17 0.018 265);
+  --sidebar: oklch(0.16 0.01 260);
   --sidebar-foreground: oklch(0.94 0.006 75);
   --sidebar-primary: oklch(0.78 0.17 75);
   --sidebar-primary-foreground: oklch(0.14 0.04 60);
-  --sidebar-accent: oklch(0.22 0.02 265);
+  --sidebar-accent: oklch(0.21 0.012 260);
   --sidebar-accent-foreground: oklch(0.94 0.006 75);
-  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-border: oklch(1 0 0 / 8%);
   --sidebar-ring: oklch(0.78 0.17 75);
 }
 
@@ -155,8 +154,16 @@
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
-    @apply bg-background text-foreground;
+    @apply text-foreground;
+    background-color: var(--background);
+    background-image: radial-gradient(
+      circle,
+      var(--grid-dot) 1.5px,
+      transparent 1.5px
+    );
+    background-size: 20px 20px;
   }
 }
 
@@ -222,7 +229,6 @@
   }
 }
 
-/* Smooth scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
 }
