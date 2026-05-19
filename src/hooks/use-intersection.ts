@@ -16,7 +16,10 @@ export function useIntersection(onIntersect: () => void, enabled: boolean) {
           onIntersect();
         }
       },
-      { threshold: 0.5 },
+      {
+        threshold: 0,
+        rootMargin: "0px 0px 400px 0px",
+      },
     );
 
     observer.observe(ref.current);

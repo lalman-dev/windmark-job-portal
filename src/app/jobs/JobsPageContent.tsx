@@ -1,6 +1,8 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { fetchJobs } from "@/lib/api";
 import { useQueryStates } from "nuqs";
 import { filterParsers } from "@/lib/search-params";
 import { useJobs } from "@/hooks/use-jobs";
@@ -41,6 +43,9 @@ export default function JobsPage() {
   const [allJobs, setAllJobs] = useState<Job[]>([]);
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
 
+  const isAccumulating = useRef(false);
+
+  const queryClient = useQueryClient();
   const limit = 10;
   const { data, isLoading, isError } = useJobs(page, limit);
 
@@ -75,6 +80,7 @@ export default function JobsPage() {
 
     if (page === 1) {
       setAllJobs(jobs);
+      isAccumulating.current = false;
       return;
     }
 
@@ -83,7 +89,20 @@ export default function JobsPage() {
       jobs.forEach((j) => map.set(j.id, j));
       return Array.from(map.values());
     });
+    isAccumulating.current = false;
   }, [data, viewMode]);
+
+  useEffect(() => {
+    if (viewMode !== "infinite") return;
+    if (!hasNextPage) return;
+
+    queryClient.prefetchQuery({
+      queryKey: ["jobs", page + 1, limit],
+      queryFn: () => fetchJobs(page + 1, limit),
+
+      staleTime: 30_000,
+    });
+  }, [page, hasNextPage, viewMode, queryClient, limit]);
 
   const handleLoadMore = useCallback(() => {
     if (viewMode !== "infinite") return;
@@ -101,6 +120,7 @@ export default function JobsPage() {
   const filterKey = JSON.stringify(filters);
   useEffect(() => {
     if (viewMode !== "infinite") return;
+    isAccumulating.current = true;
     setPage(1);
     setAllJobs([]);
   }, [filterKey, viewMode]);
@@ -236,26 +256,21 @@ export default function JobsPage() {
 
             <JobList
               jobs={filteredJobs}
-              isLoading={isLoading}
+              isLoading={
+                isLoading || (viewMode === "infinite" && isAccumulating.current)
+              }
               isError={isError}
               onJobClick={setSelectedJob}
             />
-            {viewMode === "infinite" && isLoading && page > 1 && (
-              <div className="mt-4 space-y-3">
-                {Array.from({ length: 3 }).map((_, i) => (
-                  <div
-                    key={i}
-                    className="h-32 animate-pulse rounded-xl border bg-card"
-                  />
-                ))}
-              </div>
-            )}
 
             {isError && <ErrorState onRetry={() => window.location.reload()} />}
 
-            {!isLoading && !isError && filteredJobs.length === 0 && (
-              <EmptyState onClear={clearAllFilters} />
-            )}
+            {!isLoading &&
+              !isError &&
+              !isAccumulating.current &&
+              filteredJobs.length === 0 && (
+                <EmptyState onClear={clearAllFilters} />
+              )}
 
             {viewMode === "infinite" && hasNextPage && (
               <div ref={loadMoreRef} className="h-10" />
